@@ -2,10 +2,22 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strconv"
+	"errors"
 )
 
+const accountBalanceFile = "balance.txt"
+
 func main() {
-	accountBalance := 1000.0
+	accountBalance, err := getBlance()
+
+	if err != nil {
+		fmt.Println("ERROR")
+		fmt.Println(err)
+		fmt.Println("------------")
+		// panic("Can't proceed.")
+	}
 
 	fmt.Println("Welcome to Go Bank!")
 
@@ -35,6 +47,7 @@ func main() {
 			}
 
 			accountBalance += depositAmount
+			writeBalance(accountBalance)
 			fmt.Println("Balance updated! New amount:", accountBalance)
 		case 3:
 			var withdrawAmount float64
@@ -52,6 +65,7 @@ func main() {
 			}
 
 			accountBalance -= withdrawAmount
+			writeBalance(accountBalance)
 			fmt.Println("Balance updated! New amount:", accountBalance)
 		case 4:
 			fmt.Println("Bye bye!")
@@ -60,4 +74,25 @@ func main() {
 			fmt.Println("Invalid choice.")
 		}
 	}
+}
+
+func  writeBalance(balance float64) {
+	balanceText := fmt.Sprint(balance)
+	os.WriteFile(accountBalanceFile, []byte(balanceText), 0644)
+}
+
+func getBlance() (float64, error) {
+	data, err := os.ReadFile(accountBalanceFile)
+
+	if err != nil {
+		return 0, errors.New("failed to read balance")
+	}
+
+	balanceText, err := strconv.ParseFloat(string(data), 64)
+
+	if err != nil {
+		return 0, errors.New("failed to parse stored balance")
+	}
+
+	return balanceText, nil
 }
