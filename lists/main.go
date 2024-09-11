@@ -8,7 +8,7 @@ type Product struct {
 	price float64
 }
 
-func main()  {
+func mainPractice()  {
     hobbies := [3]string{"cars", "drones", "wealth"}
 	fmt.Println(hobbies)
 	fmt.Println("First element value: ", hobbies[0])
@@ -42,7 +42,7 @@ func main()  {
 	fmt.Println(products)
 }
 
-func mainSlices()  {
+func main()  {
 	prices := []float64{10.99, 8.99}
 	fmt.Println(prices[0])
 	fmt.Println(prices[1:])
@@ -50,6 +50,26 @@ func mainSlices()  {
 	prices = append(prices, 5.99)
 
 	fmt.Println(prices)
+
+	discountPrices := []float64{11.99, 33, 555.55}
+
+	prices = append(prices, discountPrices...)
+
+	fmt.Println(prices)
+
+	userNames := make([]string, 2, 5)
+
+	userNames[0] = "Pavlik"
+
+	userNames = append(userNames, "Jake")
+	userNames = append(userNames, "Max")
+
+	fmt.Println(userNames)
+
+	for i, v := range userNames {
+		fmt.Println(i)
+		fmt.Println(v)
+	}
 }
 
 func mainInitial() {
