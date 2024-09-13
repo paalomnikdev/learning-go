@@ -21,6 +21,28 @@ func main() {
 	fmt.Println(
 		transformNumbers(&numbers, createTransformer(5)),
 	)
+
+	fmt.Println("factorial: ", factorial(5))
+	fmt.Println("sum: ", sumup(10, 20, 30))
+	fmt.Println("sum from slice: ", sumup(55, numbers...))
+}
+
+func sumup(startingValue int, numbers ...int) int {
+	sum := startingValue
+
+	for _, v := range numbers {
+		sum += v
+	}
+
+	return sum
+}
+
+func factorial(number int) int {
+	if number == 0 {
+		return 1
+	}
+
+	return number * factorial(number - 1)
 }
 
 func transformNumbers(numbers *[]int, transform transformFn) []int {
