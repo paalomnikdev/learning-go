@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"example.com/practice/prices"
 )
 
