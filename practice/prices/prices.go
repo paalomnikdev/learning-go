@@ -2,25 +2,22 @@ package prices
 
 import (
 	"fmt"
-	"strings"
-	"time"
 
 	"example.com/practice/conversion"
 	"example.com/practice/filemanager"
 )
 
-const storageDir = "./calculation_results"
-
 type TaxIncludedPrices map[string]string
 
 type TaxIncludedPriceJob struct {
-	TaxRate float64
-	InputPrices []float64
-	TaxIncludedPrices TaxIncludedPrices
+	IOManager *filemanager.FileManager `json:"-"`
+	TaxRate float64 `json:"tax_rate"`
+	InputPrices []float64 `json:"input_prices"`
+	TaxIncludedPrices TaxIncludedPrices `json:"tax_included_prices"`
 }
 
 func (job *TaxIncludedPriceJob) LoadData() {
-	lines, err := filemanager.ReadLines("prices.txt")
+	lines, err := job.IOManager.ReadLines()
 
 	if err != nil {
 		fmt.Println("File read error: ", err)
@@ -46,19 +43,14 @@ func (job *TaxIncludedPriceJob) Process() {
 		job.TaxIncludedPrices[fmt.Sprintf("%.2f", price)] = fmt.Sprintf("%.2f", taxIncludedPrice)
 	}
 
-	fileName := strings.ToLower(fmt.Sprintf(
-		"%s/%s.json",
-		storageDir,
-		time.Now().Format("20060102_150405"),
-	))
-
-	filemanager.WriteJSON(fileName, job.TaxIncludedPrices)
+	job.IOManager.WriteJSON(job)
 }
 
-func NewTaxIncludedPriceJob(taxRate float64) *TaxIncludedPriceJob {
+func NewTaxIncludedPriceJob(fm *filemanager.FileManager, taxRate float64) *TaxIncludedPriceJob {
 	return &TaxIncludedPriceJob{
 		InputPrices: []float64{10, 20, 30},
 		TaxRate: taxRate,
 		TaxIncludedPrices: map[string]string{},
+		IOManager: fm,
 	}
 }
