@@ -47,8 +47,7 @@ func createEvent(ctx *gin.Context) {
 		return
 	}
 
-	event.ID = 1
-	event.UserID = 1
+	event.UserID = ctx.GetInt64("userId")
 
 	err = event.Save()
 
@@ -69,11 +68,16 @@ func updateEvent(ctx *gin.Context) {
 		return
 	}
 
-	_, err = models.GetEventById(eventId)
+	event, err := models.GetEventById(eventId)
 
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Can't fetch event"})
+		return
+	}
+
+	if event.UserID != ctx.GetInt64("userId") {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "Only creator can update event"})
 		return
 	}
 
@@ -114,6 +118,11 @@ func deleteEvent(ctx *gin.Context) {
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Can't fetch event"})
+		return
+	}
+
+	if event.UserID != ctx.GetInt64("userId") {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "Only creator can delete event"})
 		return
 	}
 

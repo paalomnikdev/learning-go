@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func signup(ctx *gin.Context) {
+func Signup(ctx *gin.Context) {
 	var user models.User
 
 	err := ctx.ShouldBindJSON(&user)
@@ -23,6 +23,7 @@ func signup(ctx *gin.Context) {
 	err = user.Save()
 
 	if err != nil {
+		fmt.Println(err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Can't save user."})
 		return
 	}
@@ -30,7 +31,7 @@ func signup(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{"message": "User created.", "user": gin.H{"email": user.Email, "id": user.ID}})
 }
 
-func login(ctx *gin.Context) {
+func Login(ctx *gin.Context) {
 	var user models.User
 
 	err := ctx.ShouldBindJSON(&user)
