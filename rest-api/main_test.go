@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"example.com/rest-api/db"
@@ -15,24 +17,40 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var testDB *sql.DB
+var validCredentialsUser models.User
+var invalidCredentialsUser models.User
 
-func TestSignupAndLogin(t *testing.T) {
-	gin.SetMode(gin.TestMode)
+func TestMain(m *testing.M) {
 	db.InitDB(":memory:")
 	defer db.DB.Close()
 
-	server := gin.Default()
-	server.POST("/signup", routes.Signup)
-	server.POST("/login", routes.Login)
+	testDB = db.DB
 
-	user := models.User{
+	validCredentialsUser = models.User{
 		Email: "tester@example.com",
-		Password: "supers3cr3t",
+		Password: "Sup3rs3cr3t",
 	}
 
-	userJson, _ := json.Marshal(user)
+	invalidCredentialsUser = models.User{
+		Email: "tester@example.com",
+		Password: "inv@l1d",
+	}
 
-	// test signup
+	code := m.Run()
+
+	os.Exit(code)
+}
+
+
+func TestSignup(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	server := gin.Default()
+
+	server.POST("/signup", routes.Signup)
+
+	userJson, _ := json.Marshal(validCredentialsUser)
+
 	req, _ := http.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer(userJson))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -42,34 +60,48 @@ func TestSignupAndLogin(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, w.Code)
 
 	var count int
-	err := db.DB.QueryRow("SELECT COUNT(*) FROM users WHERE email = ?", user.Email).Scan(&count)
+	err := db.DB.QueryRow("SELECT COUNT(*) FROM users WHERE email = ?", validCredentialsUser.Email).Scan(&count)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, count)
+}
 
-	//test success login
-	req, _ = http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(userJson))
+func TestLoginSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	server := gin.Default()
+
+	server.POST("/login", routes.Login)
+
+	userJson, _ := json.Marshal(validCredentialsUser)
+
+	req, _ := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(userJson))
 	req.Header.Set("Content-Type", "application/json")
 
-	w = httptest.NewRecorder()
+	w := httptest.NewRecorder()
 
 	server.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var loginResponse map[string]any
-	err = json.Unmarshal(w.Body.Bytes(), &loginResponse)
+	err := json.Unmarshal(w.Body.Bytes(), &loginResponse)
 	assert.NoError(t, err)
 
 	token, exists := loginResponse["token"]
 	assert.True(t, exists)
 	assert.NotEmpty(t, token)
+}
 
-	//test failed login
-	user.Password = "invalidPassword"
-	invalidUserJson, _ := json.Marshal(user)
-	req, _ = http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(invalidUserJson))
+func TestLoginFail(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	server := gin.Default()
+
+	server.POST("/login", routes.Login)
+
+	userJson, _ := json.Marshal(invalidCredentialsUser)
+
+	req, _ := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(userJson))
 	req.Header.Set("Content-Type", "application/json")
 
-	w = httptest.NewRecorder()
+	w := httptest.NewRecorder()
 	server.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
